@@ -1,0 +1,462 @@
+<?xml version="1.0" encoding="utf-8"?>
+<modification>
+    <name>OCDEV.pro - Multilanguage ocStore 2.3.x</name>
+    <code>ocdevpro_multilang_code</code>
+    <version>1.3.6</version>
+    <author>alexwaha</author>
+    <link>https://ocdev.pro</link>
+    <file path="catalog/controller/common/header.php">
+        <operation>
+            <search><![CDATA[$data['language'] = $this->load->controller('common/language');]]></search>
+            <add position="before"><![CDATA[$data['hreflang'] = $this->load->controller('extension/module/ocd_multilang');]]></add>
+        </operation>
+    </file>
+    <file path="catalog/view/theme/*/template/common/header.tpl">
+        <operation>
+            <search><![CDATA[<?php foreach ($links as $link) { ?>]]></search>
+            <add position="before"><![CDATA[<?php foreach($hreflang as $lang) { ?>
+            <link rel="<?php echo $lang['rel']; ?>" hreflang="<?php echo $lang['prefix']; ?>" href="<?php echo $lang['href']; ?>" />
+            <?php } ?>
+            ]]></add>
+        </operation>
+    </file>
+    <file path="admin/controller/localisation/language.php">
+        <operation>
+            <search><![CDATA[$data['languages'][] = array(]]></search>
+            <add position="after"><![CDATA['url' => $result['url'],]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[$this->language->get('column_code');]]></search>
+            <add position="before"><![CDATA[
+            $data['column_url'] = $this->language->get('column_url');
+            ]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[$this->language->get('entry_code');]]></search>
+            <add position="before"><![CDATA[
+            $data['entry_url'] = $this->language->get('entry_url');
+            ]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[if (isset($this->error['locale'])) {]]></search>
+            <add position="before"><![CDATA[
+            if (isset($this->error['url'])) {
+                $data['error_url'] = $this->error['url'];
+            } else {
+                $data['error_url'] = '';
+            }
+            ]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[if (isset($this->request->post['code'])) {]]></search>
+            <add position="before"><![CDATA[
+            if (isset($this->request->post['url'])) {
+                $data['url'] = $this->request->post['url'];
+            } elseif (!empty($language_info)) {
+                $data['url'] = $language_info['url'];
+            } else {
+                $data['url'] = '';
+            }
+            ]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[if (!$this->request->post['locale']) {]]></search>
+            <add position="before"><![CDATA[
+            if (utf8_strlen($this->request->post['url']) < 2 || (utf8_strlen($this->request->post['url']) > 32)) {
+                $this->error['url'] = $this->language->get('error_url');
+            }
+            ]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[$data['sort_code']]]></search>
+            <add position="before"><![CDATA[
+            $data['sort_url'] = $this->url->link('localisation/language', 'token=' . $this->session->data['token'] . '&sort=url' . $url, true);
+            ]]></add>
+        </operation>
+    </file>
+    <file path="admin/language/*/localisation/language.php">
+        <operation>
+            <search><![CDATA[$_['column_sort_order']]]></search>
+            <add position="before"><![CDATA[$_['column_url'] = 'URL prefix';]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[$_['entry_locale']]]></search>
+            <add position="before"><![CDATA[$_['entry_url'] = 'URL prefix';]]></add>
+        </operation>
+    </file>
+    <file path="admin/language/ru-ru/localisation/language.php">
+        <operation>
+            <search><![CDATA[$_['error_locale']]]></search>
+            <add position="before"><![CDATA[$_['error_url'] = 'Префикс языка должен быть от 2 до 32 символов!';]]></add>
+        </operation>
+    </file>
+    <file path="admin/language/en-gb/localisation/language.php">
+        <operation>
+            <search><![CDATA[$_['error_locale']]]></search>
+            <add position="before"><![CDATA[$_['error_url'] = 'Url prefix must be between 2 and 32 characters!';]]></add>
+        </operation>
+    </file>
+    <file path="admin/model/localisation/language.php">
+        <operation>
+            <search><![CDATA[locale =]]></search>
+            <add position="replace"><![CDATA[url = '" . $this->db->escape($data['url']) . "', locale =]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[$sort_data = array(]]></search>
+            <add position="after"><![CDATA['url',]]></add>
+        </operation>
+    </file>
+    <file path="admin/view/template/localisation/language_list.tpl">
+        <operation>
+            <search><![CDATA[<td class="text-right"><?php if ($sort == 'sort_order') { ?>]]></search>
+            <add position="before"><![CDATA[
+              <td class="text-left"><?php if ($sort == 'url') { ?>
+                <a href="<?php echo $sort_url; ?>" class="<?php echo strtolower($order); ?>"><?php echo $column_url; ?></a>
+                <?php } else { ?>
+                <a href="<?php echo $sort_url; ?>"><?php echo $column_url; ?></a>
+                <?php } ?></td>
+            ]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[<td class="text-left"><?php echo $language['code']; ?></td>]]></search>
+            <add position="after"><![CDATA[<td class="text-left"><?php echo $language['url']; ?></td>]]></add>
+        </operation>
+    </file>
+    <file path="admin/view/template/localisation/language_form.tpl">
+        <operation>
+            <search><![CDATA[<div class="text-danger"><?php echo $error_code; ?></div>]]></search>
+            <add position="after" offset="3"><![CDATA[
+            <div class="form-group required">
+                <label class="col-sm-2 control-label required" for="input-url"><?php echo $entry_url; ?></label>
+                <div class="col-sm-10">
+                  <input type="text" name="url" value="<?php echo $url; ?>" placeholder="<?php echo $entry_url; ?>" id="input-url" class="form-control" />
+                  <?php if ($error_url) { ?>
+                  <div class="text-danger"><?php echo $error_url; ?></div>
+                  <?php } ?>
+                </div>
+            </div>
+            ]]></add>
+        </operation>
+    </file>
+    <file path="catalog/controller/information/contact.php">
+        <operation>
+            <search><![CDATA[$data['store'] = $this->config->get('config_name');]]></search>
+            <add position="after"><![CDATA[
+            $language_id = $this->config->get('config_language_id');
+
+            $ocd_multilang_data = $this->config->get('ocd_multilang_data');
+
+            if (isset($ocd_multilang_data[$language_id])) {
+                $address = $ocd_multilang_data[$language_id]['address'];
+            }
+
+            $ocd_address = $address ? $address : $this->config->get('config_address');
+            ]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[nl2br($this->config->get('config_address'));]]></search>
+            <add position="replace"><![CDATA[nl2br($ocd_address);]]></add>
+        </operation>
+    </file>
+    <file path="catalog/controller/common/home.php">
+        <operation>
+            <search><![CDATA[if (isset($this->request->get['route'])) {]]></search>
+            <add position="before"><![CDATA[$this->document->addLink($this->getCanonical(), 'canonical');]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[$this->document->addLink($this->config->get('config_url'), 'canonical');]]></search>
+            <add position="replace"><![CDATA[//$this->document->addLink($this->config->get('config_url'), 'canonical');]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[public function index() {]]></search>
+            <add position="before"><![CDATA[
+            protected function getCanonical() {
+                $url = HTTP_SERVER;
+                if( $this->config->get('config_seo_url')
+                    && $this->config->get('config_seo_url_type') == 'seo_pro') {
+                    $url = $this->url->link('common/home');
+                    $query = $this->db->query("SELECT value FROM " . DB_PREFIX . "setting WHERE store_id = '" . (int)$this->config->get('config_store_id') . "' AND `key` ='config_language'");
+
+                    $query_url = $this->db->query("SELECT `url` FROM `" . DB_PREFIX . "language` WHERE `code` = '" . $query->row['value'] ."'");
+
+                    $languageSlug = $this->session->data['language_url'];
+
+                    // Do not show language url for home when default language is always shown
+                    if($languageSlug == $query_url->row['url']) {
+                        $component = parse_url($url);
+                        if ($component['scheme'] == 'https') {
+                            $domain = $this->config->get('config_ssl');
+                        } else {
+                            $domain = $this->config->get('config_url');
+                        }
+
+                        $url = preg_replace('~('.$domain.')('.$languageSlug.'/)(.+)~i', '$1$3',$url);
+                    }
+                }
+
+                return $url;
+            }
+            ]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[$this->config->get('config_meta_title')]]></search>
+            <add position="replace"><![CDATA[$ocd_meta_title]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[$this->config->get('config_meta_description')]]></search>
+            <add position="replace"><![CDATA[$ocd_meta_description]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[$this->config->get('config_meta_keyword')]]></search>
+            <add position="replace"><![CDATA[$ocd_meta_keyword]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[public function index() {]]></search>
+            <add position="after"><![CDATA[
+            $language_id = $this->config->get('config_language_id');
+
+            $ocd_multilang_data = $this->config->get('ocd_multilang_data');
+
+            $ocd_meta_title = $this->config->get('config_meta_title');
+            $ocd_meta_description = $this->config->get('config_meta_description');
+            $ocd_meta_keyword = $this->config->get('config_meta_keyword');
+
+            if (isset($ocd_multilang_data[$language_id])) {
+                if($ocd_multilang_data[$language_id]['meta_title']) {
+                    $ocd_meta_title = $ocd_multilang_data[$language_id]['meta_title'];
+                }
+                if($ocd_multilang_data[$language_id]['meta_description']) {
+                    $ocd_meta_description = $ocd_multilang_data[$language_id]['meta_description'];
+                }
+                if($ocd_multilang_data[$language_id]['meta_keyword']) {
+                    $ocd_meta_keyword = $ocd_multilang_data[$language_id]['meta_keyword'];
+                }
+            }
+            ]]></add>
+        </operation>
+    </file>
+    <file path="catalog/controller/common/language.php">
+        <operation>
+            <search><![CDATA[public function index() {]]></search>
+            <add position="replace"><![CDATA[
+            public function index() {
+                $this->load->language('common/language');
+
+                $data['text_language'] = $this->language->get('text_language');
+
+                $data['code'] = $this->session->data['language'];
+
+                $data['languages'] = [];
+
+                $results = $this->load->controller('extension/module/ocd_multilang');
+
+                foreach ($results as $result) {
+                    $data['languages'][] = [
+                        'name'      => $result['name'],
+                        'code'      => $result['code'],
+                        'href'      => $result['href'],
+                        'href_lang' => $result['href_lang'],
+                    ];
+                }
+
+                return $this->load->view('common/ocd_language', $data);
+            }
+
+            public function index_old() {
+            ]]></add>
+        </operation>
+    </file>
+    <file path="catalog/model/localisation/language.php">
+        <operation>
+            <search><![CDATA[$result['code'],]]></search>
+            <add position="after"><![CDATA['url' => $result['url'],]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[public function getLanguage($language_id) {]]></search>
+            <add position="before"><![CDATA[
+			public function getLanguageUrl($language_id) {
+				$query = $this->db->query("SELECT url FROM " . DB_PREFIX . "language WHERE language_id = '" . (int)$language_id . "'");
+
+				return $query->row['url'];
+			}
+            ]]></add>
+        </operation>
+    </file>
+    <file path="catalog/controller/startup/seo_pro.php">
+        <operation>
+            <search><![CDATA[private $cache_data = null;]]></search>
+            <add position="after"><![CDATA[
+            private $languages = array();
+            private $config_language_id;
+            private $config_language;
+            private $config_language_url;
+            ]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[$this->cache->set('seo_pro', $this->cache_data);]]></search>
+            <add position="after" offset="1"><![CDATA[
+            $this->config_language_id = $this->config->get('ocd_multilang_language');
+            $this->config_language = $this->config->get('config_language');
+
+            $language_data = $this->db->query("SELECT `url` FROM `" . DB_PREFIX . "language` WHERE `language_id` = '"
+                . $this->config_language_id . "'");
+
+            $this->config_language_url = $language_data->row['url'];
+
+            $query = $this->db->query("SELECT * FROM " . DB_PREFIX . "language WHERE status = '1'");
+
+            foreach ($query->rows as $result) {
+                $this->languages[$result['url']] = $result;
+            }
+            ]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[public function index() {]]></search>
+            <add position="after"><![CDATA[
+            $languageSlug = null;
+
+            if (isset($this->request->cookie['language_url'])) {
+                $this->session->data['language_url'] = $this->request->cookie['language_url'];
+            }
+
+            $languageSession = isset($this->session->data['language_url']) ? $this->session->data['language_url'] : false;
+
+            $code = null;
+            $_route_ = isset($this->request->get['_route_']) ? $this->request->get['_route_'] : false;
+
+            if ($_route_) {
+                $tokens = explode('/', $_route_);
+
+                if (array_key_exists($tokens[0], $this->languages)) {
+                    $languageSlug = $tokens[0];
+                    $this->request->get['_route_'] = substr($this->request->get['_route_'], strlen($languageSlug) + 1);
+                }
+
+                if (!array_key_exists($tokens[0], $this->languages)) {
+                    $languageSlug = $this->config_language_url;
+                }
+
+                if (trim($this->request->get['_route_']) == '' || trim($this->request->get['_route_']) == 'index.php') {
+                    unset($this->request->get['_route_']);
+                }
+
+                if (!isset($this->request->cookie['language_url']) || $this->request->cookie['language_url'] !== $languageSlug) {
+                    setcookie('language_url', $languageSlug, time() + 60 * 60 * 24 * 30, '/', $this->request->server['HTTP_HOST']);
+                }
+            }
+
+            if (!$_route_ && $languageSession) {
+                $languageSlug = $this->session->data['language_url'];
+            }
+
+            if (!$_route_ && !$languageSession) {
+                $languageSlug = $this->config_language_url;
+            }
+
+            if (!$languageSession && !isset($this->session->data['language'])) {
+                $this->session->data['language_url'] = $this->config_language_url;
+            }
+
+            if (!$languageSession || $this->session->data['language_url'] != $languageSlug) {
+                $this->session->data['language_url'] = $languageSlug;
+            }
+
+            if (!$code) {
+                $code = $this->config_language;
+            }
+
+            if ($code) {
+                $code = $this->languages[$languageSlug]['code'];
+            }
+
+            if (!isset($this->session->data['language']) || $this->session->data['language'] != $code) {
+                $this->session->data['language'] = $code;
+            }
+
+            if (!isset($this->request->cookie['language']) || $this->request->cookie['language'] != $code) {
+                setcookie('language', $code, time() + 60 * 60 * 24 * 30, '/', $this->request->server['HTTP_HOST']);
+            }
+
+            $this->config->set('config_language_id', $this->languages[$languageSlug]['language_id']);
+            $this->config->set('config_language', $this->languages[$languageSlug]['code']);
+
+            $language = new Language($code);
+            $language->load($code);
+
+            $this->registry->set('language', $language);
+            ]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[public function rewrite($link) {]]></search>
+            <add position="replace"><![CDATA[
+            public function rewrite($link, $languageSlug = '') {
+                if (!$languageSlug) {
+                    $languageSlug = $this->session->data['language_url'];
+                }
+
+                if ($languageSlug == $this->config_language_url) {
+                    $languageSlug = '';
+                } else {
+                    $languageSlug .= '/';
+                }
+            ]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[case 'product/product':]]></search>
+            <add position="before"><![CDATA[
+            case 'common/home':
+                if ($component['scheme'] == 'https') {
+                    $link = $this->config->get('config_ssl');
+                } else {
+                    $link = $this->config->get('config_url');
+                }
+                if ($languageSlug != $this->config_language_url . '/') {
+                    $link .= $languageSlug;
+                }
+                if (isset($this->cache_data['queries']['common/home'])) {
+                    $link .= $this->cache_data['queries']['common/home'];
+                }
+
+                //Skip allowed get parameters on homepage
+                $seo_pro_utm = preg_replace('~\r?\n~', "\n", $this->config->get('config_seo_pro_utm'));
+
+                $valide_routes = explode("\n", $seo_pro_utm);
+
+                $tmp = $data;
+
+                $allowed_parameters = [];
+
+                foreach ($tmp as $key => $tmp_data) {
+                    if(in_array($key, $valide_routes)) {
+                        $allowed_parameters[$key] = $tmp_data;
+                    }
+                }
+
+                if($allowed_parameters) {
+                    $link .= '?' . urldecode(http_build_query($allowed_parameters, '', '&amp;'));
+                }
+
+                // Return clean shop link with any GET-parameters stripped off
+                return $link;
+                // (if you want to pass all parameters on homepage as is, comment the line above: `// return $link;`)
+                break;
+            ]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[$link .= 'index.php?route=' . $route;]]></search>
+            <add position="replace"><![CDATA[$link .= $languageSlug . 'index.php?route=' . $route;]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[$seo_url = trim($seo_url, '/');]]></search>
+            <add position="replace"><![CDATA[$seo_url = $languageSlug . trim($seo_url, '/');]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[private function validate() {]]></search>
+            <add position="after"><![CDATA[
+            if (isset($this->request->get['route']) && preg_match('~^api/~',$this->request->get['route'])) {
+                return;
+            }
+            ]]></add>
+        </operation>
+    </file>
+</modification>
